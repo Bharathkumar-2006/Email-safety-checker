@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Safety Checker</title>
+    <link rel="stylesheet" href="styles/popup.css">
+</head>
+<body>
+    <h2>Email Safety Checker</h2>
+    <div id="login-section">
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button id="login-btn">Login</button>
+        <p>New User? <a href="#">Register here</a></p>
+        <p id="error-message"></p>
+    </div>
+    <div id="register-section">
+        <input type="text" id="username" placeholder="Username">
+        <input type="email" id="email" placeholder="Work or College email address">
+        <input type="password" id="password" placeholder="Password">
+        <input type="password" id="password" placeholder="Confirm Password">
+        <button id="login-btn">Register</button>
+        <p>Already a user? <a href="#">Login here</a></p>
+        <p id="error-message"></p>
+    </div>
+    <div id="email-checker" style="display: none;">
+        <p><strong>Email:</strong> <span id="email-display">N/A</span></p>
+        <button id="check-email-btn">Check Email</button>
+        <p id="result"></p>
+        <button id="logout-btn">Logout</button>
+    </div>
+    <script src="scripts/popup.js"></script>
+</body>
+</html>

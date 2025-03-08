@@ -1,74 +1,75 @@
-document.addEventListener("DOMContentLoaded", async () => {
-    const loginSection = document.getElementById("login-section");
-    const emailChecker = document.getElementById("email-checker");
-    const usernameInput = document.getElementById("username");
-    const passwordInput = document.getElementById("password");
-    const loginBtn = document.getElementById("login-btn");
-    const checkEmailBtn = document.getElementById("check-email-btn");
+document.addEventListener("DOMContentLoaded", async function () {
     const logoutBtn = document.getElementById("logout-btn");
-    const errorMessage = document.getElementById("error-message");
-    const emailDisplay = document.getElementById("email-display");
-    const resultDisplay = document.getElementById("result");
+    const checkEmailBtn = document.getElementById("check-email-btn");
 
-    const storedToken = await chrome.storage.local.get("token");
+    const API_URL = "http://localhost:5000/api";
+    let userApiKey = "";
 
-    if (storedToken.token) {
-        loginSection.style.display = "none";
-        emailChecker.style.display = "block";
+    // 🔹 Check if user is logged in
+    chrome.storage.local.get("token", async (data) => {
+        if (!data.token) {
+            window.location.href = "login.html";
+            return;
+        }
 
-        chrome.storage.local.get("email", (data) => {
-            if (data.email) {
-                emailDisplay.textContent = data.email;
-            }
-        });
-    }
-
-    loginBtn.addEventListener("click", async () => {
-        const username = usernameInput.value;
-        const password = passwordInput.value;
-
+        // 🔹 Get User's API Key
         try {
-            const res = await fetch("https://localhost:5000/api/auth/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password })
+            const response = await fetch(`${API_URL}/auth/get-api-key`, {
+                method: "GET",
+                headers: { "Authorization": `Bearer ${data.token}` },
             });
 
-            const data = await res.json();
-            if (res.ok) {
-                await chrome.storage.local.set({ token: data.token });
-                loginSection.style.display = "none";
-                emailChecker.style.display = "block";
+            const result = await response.json();
+
+            if (response.ok) {
+                userApiKey = result.apiKey;
             } else {
-                errorMessage.textContent = data.message;
+                console.error("Failed to get API key:", result.message);
             }
         } catch (error) {
-            errorMessage.textContent = "Login failed!";
+            console.error("Error fetching API key:", error);
         }
     });
 
-    checkEmailBtn.addEventListener("click", async () => {
-        const { email } = await chrome.storage.local.get("email");
-        if (!email) return (resultDisplay.textContent = "No email found.");
-
-        const { token } = await chrome.storage.local.get("token");
-
-        const res = await fetch("https://localhost/api/check-email", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({ email })
+    // 🔹 Logout Button
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+            chrome.storage.local.remove("token", () => {
+                window.location.href = "login.html";
+            });
         });
+    }
 
-        const data = await res.json();
-        resultDisplay.textContent = data.safe ? "Safe ✅" : "Spam ❌";
-    });
+    // 🔹 Check Email API Call
+    if (checkEmailBtn) {
+        checkEmailBtn.addEventListener("click", async () => {
+            const email = document.getElementById("email-display").innerText;
 
-    logoutBtn.addEventListener("click", async () => {
-        await chrome.storage.local.remove(["token", "email"]);
-        loginSection.style.display = "block";
-        emailChecker.style.display = "none";
-    });
+            if (!userApiKey) {
+                document.getElementById("result").innerText = "API Key not found.";
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/email/check`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${userApiKey}`
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById("result").innerText = `Result: ${result.status}`;
+                } else {
+                    document.getElementById("result").innerText = "Error checking email.";
+                }
+            } catch (error) {
+                console.error("Email check error:", error);
+            }
+        });
+    }
 });

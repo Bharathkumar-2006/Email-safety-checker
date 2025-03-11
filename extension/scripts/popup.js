@@ -5,14 +5,14 @@ document.addEventListener("DOMContentLoaded", async function () {
     const API_URL = "http://localhost:5000/api";
     let userApiKey = "";
 
-    // 🔹 Check if user is logged in
+    //Check if user is logged in
     chrome.storage.local.get("token", async (data) => {
         if (!data.token) {
             window.location.href = "login.html";
             return;
         }
 
-        // 🔹 Get User's API Key
+        //Get User's API Key
         try {
             const response = await fetch(`${API_URL}/auth/get-api-key`, {
                 method: "GET",
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     });
 
-    // 🔹 Logout Button
+    //Logout Button
     if (logoutBtn) {
         logoutBtn.addEventListener("click", () => {
             chrome.storage.local.remove("token", () => {
@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         });
     }
 
-    // 🔹 Check Email API Call
+    //Check Email API Call
     if (checkEmailBtn) {
         checkEmailBtn.addEventListener("click", async () => {
             const email = document.getElementById("email-display").innerText;

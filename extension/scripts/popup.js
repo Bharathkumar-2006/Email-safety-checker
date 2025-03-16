@@ -1,32 +1,61 @@
 document.addEventListener("DOMContentLoaded", function () {
     const token = localStorage.getItem("token");
 
-    // If no token, redirect to login page
+    // Redirect to login if no token
     if (!token) {
         window.location.href = "login.html";
         return;
     }
 
-    const emailDisplay = document.getElementById("email-display");
+    const emailInput = document.getElementById("email-input");
+    const fetchEmailBtn = document.getElementById("fetch-email-btn");
     const checkEmailBtn = document.getElementById("check-email-btn");
     const resultDisplay = document.getElementById("result");
 
-    // Fetch sender's email from content script
+    //load stored email
+    function loadStoredEmail() {
+        chrome.storage.local.get("fetchedEmail", function (data) {
+            if (data.fetchedEmail) {
+                emailInput.value = data.fetchedEmail; 
+            } else {
+                emailInput.placeholder = "Enter email manually";
+            }
+        });
+    }
+
+    loadStoredEmail();
+
+    // Fetch sender's email 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         chrome.tabs.sendMessage(tabs[0].id, { action: "getEmail" }, (response) => {
             if (response && response.email) {
-                emailDisplay.textContent = response.email;
-            } else {
-                emailDisplay.textContent = "No email detected.";
+                chrome.storage.local.set({ fetchedEmail: response.email }, function () {
+                    loadStoredEmail(); 
+                });
             }
         });
     });
 
-    // Send email to backend for verification
+    // Manually fetch email 
+    fetchEmailBtn.addEventListener("click", () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, { action: "getEmail" }, (response) => {
+                if (response && response.email) {
+                    chrome.storage.local.set({ fetchedEmail: response.email }, function () {
+                        loadStoredEmail(); 
+                    });
+                } else {
+                    alert("No email detected. Enter it manually.");
+                }
+            });
+        });
+    });
+
+    // Send email to backend 
     checkEmailBtn.addEventListener("click", () => {
-        const email = emailDisplay.textContent;
-        if (!email || email === "No email detected.") {
-            resultDisplay.textContent = "No email found.";
+        const email = emailInput.value.trim();
+        if (!email) {
+            resultDisplay.innerHTML = "<p style='color:red;'>Please enter an email.</p>";
             return;
         }
 
@@ -50,13 +79,14 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .catch(error => {
             console.error("Error:", error);
-            resultDisplay.textContent = "Error checking email.";
+            resultDisplay.innerHTML = "<p style='color:red;'>Error checking email.</p>";
         });
     });
 
-    // Logout Button
+    // Logout
     document.getElementById("logout-btn").addEventListener("click", () => {
         localStorage.removeItem("token");
+        chrome.storage.local.remove("fetchedEmail"); 
         window.location.href = "login.html";
     });
 });

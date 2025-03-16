@@ -3,7 +3,6 @@ function getEmailFromGmail() {
     return emailElement ? emailElement.getAttribute("email") : null;
 }
 
-// Listen for requests from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "getEmail") {
         sendResponse({ email: getEmailFromGmail() });

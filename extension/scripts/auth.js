@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(data => {
                 if (data.success) {
                     localStorage.setItem("token", data.token);
-                    window.location.href = "popup.html"; // Redirect to main page after login
+                    window.location.href = "popup.html"; 
                 } else {
                     document.getElementById("error-message").textContent = data.message;
                 }
@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    window.location.href = "login.html"; // Redirect to login page after registration
+                    window.location.href = "login.html"; 
                 } else {
                     document.getElementById("error-message").textContent = data.message;
                 }

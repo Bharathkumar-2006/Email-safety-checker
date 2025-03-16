@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Safety Checker</title>
+    <title>MailCheckr</title>
     <link rel="stylesheet" href="styles/popup.css">
 </head>
 <body>
-    <h2>Email Safety Checker</h2>
-    <div id="auth-section">
-        <button onclick="window.location.href='/extension/login.html'">Login</button>
-        <button onclick="window.location.href='/extension/register.html'">Register</button>
-    </div>
+    <h2>MailCheckr</h2>
 
-    <div id="email-checker" style="display: none;">
-        <p><strong>Sender Email:</strong> <span id="email-display">N/A</span></p>
+    <div id="email-checker">
+        <label for="email-input">Sender Email:</label>
+        <input type="text" id="email-input" placeholder="Fetching email...">
+        <button id="fetch-email-btn">Fetch Email</button>
         <button id="check-email-btn">Check Email</button>
-        <p id="result"></p>
+        
+        <div id="result"></div>
         <button id="logout-btn">Logout</button>
     </div>
 

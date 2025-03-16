@@ -1,69 +1,56 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     const loginBtn = document.getElementById("login-btn");
     const registerBtn = document.getElementById("register-btn");
 
-    const API_URL = "http://localhost:5000/api/auth"; // Backend API URL
-
-    // 🔹 LOGIN
     if (loginBtn) {
-        loginBtn.addEventListener("click", async () => {
-            const username = document.getElementById("login-username").value;
-            const password = document.getElementById("login-password").value;
+        loginBtn.addEventListener("click", () => {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
 
-            try {
-                const response = await fetch(`${API_URL}/login`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ username, password }),
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    chrome.storage.local.set({ token: data.token }, () => {
-                        window.location.href = "popup.html"; // Redirect to main UI
-                    });
+            fetch("http://localhost:5000/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    localStorage.setItem("token", data.token);
+                    window.location.href = "popup.html"; // Redirect to main page after login
                 } else {
-                    document.getElementById("error-message").innerText = data.message;
+                    document.getElementById("error-message").textContent = data.message;
                 }
-            } catch (error) {
-                console.error("Login error:", error);
-            }
+            })
+            .catch(error => {
+                console.error("Login Error:", error);
+                document.getElementById("error-message").textContent = "Login failed.";
+            });
         });
     }
 
-    // 🔹 REGISTER
     if (registerBtn) {
-        registerBtn.addEventListener("click", async () => {
-            const username = document.getElementById("register-username").value;
-            const email = document.getElementById("register-email").value;
-            const password = document.getElementById("register-password").value;
-            const confirmPassword = document.getElementById("confirm-password").value;
+        registerBtn.addEventListener("click", () => {
+            const username = document.getElementById("username").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
 
-            if (password !== confirmPassword) {
-                document.getElementById("error-message").innerText = "Passwords do not match.";
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_URL}/register`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ username, email, password }),
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    chrome.storage.local.set({ token: data.token }, () => {
-                        window.location.href = "popup.html"; // Redirect after registration
-                    });
+            fetch("http://localhost:5000/api/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, email, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = "login.html"; // Redirect to login page after registration
                 } else {
-                    document.getElementById("error-message").innerText = data.message;
+                    document.getElementById("error-message").textContent = data.message;
                 }
-            } catch (error) {
-                console.error("Registration error:", error);
-            }
+            })
+            .catch(error => {
+                console.error("Registration Error:", error);
+                document.getElementById("error-message").textContent = "Registration failed.";
+            });
         });
     }
 });

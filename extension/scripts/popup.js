@@ -1,75 +1,62 @@
-document.addEventListener("DOMContentLoaded", async function () {
-    const logoutBtn = document.getElementById("logout-btn");
+document.addEventListener("DOMContentLoaded", function () {
+    const token = localStorage.getItem("token");
+
+    // If no token, redirect to login page
+    if (!token) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    const emailDisplay = document.getElementById("email-display");
     const checkEmailBtn = document.getElementById("check-email-btn");
+    const resultDisplay = document.getElementById("result");
 
-    const API_URL = "http://localhost:5000/api";
-    let userApiKey = "";
+    // Fetch sender's email from content script
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "getEmail" }, (response) => {
+            if (response && response.email) {
+                emailDisplay.textContent = response.email;
+            } else {
+                emailDisplay.textContent = "No email detected.";
+            }
+        });
+    });
 
-    //Check if user is logged in
-    chrome.storage.local.get("token", async (data) => {
-        if (!data.token) {
-            window.location.href = "login.html";
+    // Send email to backend for verification
+    checkEmailBtn.addEventListener("click", () => {
+        const email = emailDisplay.textContent;
+        if (!email || email === "No email detected.") {
+            resultDisplay.textContent = "No email found.";
             return;
         }
 
-        //Get User's API Key
-        try {
-            const response = await fetch(`${API_URL}/auth/get-api-key`, {
-                method: "GET",
-                headers: { "Authorization": `Bearer ${data.token}` },
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                userApiKey = result.apiKey;
-            } else {
-                console.error("Failed to get API key:", result.message);
-            }
-        } catch (error) {
-            console.error("Error fetching API key:", error);
-        }
+        fetch("http://localhost:5000/api/check-email", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ email })
+        })
+        .then(response => response.json())
+        .then(data => {
+            resultDisplay.innerHTML = `
+                <p><strong>Valid:</strong> ${data.valid}</p>
+                <p><strong>Spam Score:</strong> ${data.fraud_score}</p>
+                <p><strong>Deliverability:</strong> ${data.deliverability}</p>
+                <p><strong>Disposable:</strong> ${data.disposable}</p>
+                <p><strong>First Seen:</strong> ${data.first_seen.human}</p>
+            `;
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            resultDisplay.textContent = "Error checking email.";
+        });
     });
 
-    //Logout Button
-    if (logoutBtn) {
-        logoutBtn.addEventListener("click", () => {
-            chrome.storage.local.remove("token", () => {
-                window.location.href = "login.html";
-            });
-        });
-    }
-
-    //Check Email API Call
-    if (checkEmailBtn) {
-        checkEmailBtn.addEventListener("click", async () => {
-            const email = document.getElementById("email-display").innerText;
-
-            if (!userApiKey) {
-                document.getElementById("result").innerText = "API Key not found.";
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_URL}/email/check`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${userApiKey}`
-                    },
-                    body: JSON.stringify({ email })
-                });
-
-                const result = await response.json();
-                
-                if (response.ok) {
-                    document.getElementById("result").innerText = `Result: ${result.status}`;
-                } else {
-                    document.getElementById("result").innerText = "Error checking email.";
-                }
-            } catch (error) {
-                console.error("Email check error:", error);
-            }
-        });
-    }
+    // Logout Button
+    document.getElementById("logout-btn").addEventListener("click", () => {
+        localStorage.removeItem("token");
+        window.location.href = "login.html";
+    });
 });

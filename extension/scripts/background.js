@@ -1,3 +1,3 @@
 chrome.runtime.onInstalled.addListener(() => {
-    console.log("Email Safety Checker Installed.");
+    console.log("Email Safety Checker Extension Installed");
 });

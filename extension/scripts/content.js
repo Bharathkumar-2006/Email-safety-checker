@@ -1,9 +1,11 @@
-function extractEmail() {
-    const emailElement = document.querySelector(".gD"); // Gmail sender email selector
-    if (emailElement) {
-        const email = emailElement.getAttribute("email");
-        chrome.storage.local.set({ email });
-    }
+function getEmailFromGmail() {
+    let emailElement = document.querySelector("span[email]");
+    return emailElement ? emailElement.getAttribute("email") : null;
 }
 
-setInterval(extractEmail, 5000); // Run every 5 seconds
+// Listen for requests from the popup
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "getEmail") {
+        sendResponse({ email: getEmailFromGmail() });
+    }
+});

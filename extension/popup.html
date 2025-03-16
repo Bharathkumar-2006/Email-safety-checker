@@ -8,10 +8,18 @@
 </head>
 <body>
     <h2>Email Safety Checker</h2>
-    <p><strong>Email:</strong> <span id="email-display">N/A</span></p>
-    <button id="check-email-btn">Check Email</button>
-    <p id="result"></p>
-    <button id="logout-btn">Logout</button>
+    <div id="auth-section">
+        <button onclick="window.location.href='/extension/login.html'">Login</button>
+        <button onclick="window.location.href='/extension/register.html'">Register</button>
+    </div>
+
+    <div id="email-checker" style="display: none;">
+        <p><strong>Sender Email:</strong> <span id="email-display">N/A</span></p>
+        <button id="check-email-btn">Check Email</button>
+        <p id="result"></p>
+        <button id="logout-btn">Logout</button>
+    </div>
+
     <script src="scripts/popup.js"></script>
 </body>
 </html>

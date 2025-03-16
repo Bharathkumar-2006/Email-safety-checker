@@ -1,8 +1,9 @@
 const express = require("express");
-const { getApiKey } = require("../controllers/apiKeyController");
+const { checkEmail } = require("../controllers/apiKeyController");
 const authMiddleware = require("../middleware/authMiddleware");
+
 const router = express.Router();
 
-router.get("/apikey", authMiddleware, getApiKey);
+router.post("/check-email", authMiddleware, checkEmail);
 
 module.exports = router;

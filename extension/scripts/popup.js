@@ -12,46 +12,34 @@ document.addEventListener("DOMContentLoaded", function () {
     const checkEmailBtn = document.getElementById("check-email-btn");
     const resultDisplay = document.getElementById("result");
 
-    //load stored email
-    function loadStoredEmail() {
-        chrome.storage.local.get("fetchedEmail", function (data) {
-            if (data.fetchedEmail) {
-                emailInput.value = data.fetchedEmail; 
-            } else {
-                emailInput.placeholder = "Enter email manually";
-            }
-        });
-    }
-
-    loadStoredEmail();
-
-    // Fetch sender's email 
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        chrome.tabs.sendMessage(tabs[0].id, { action: "getEmail" }, (response) => {
-            if (response && response.email) {
-                chrome.storage.local.set({ fetchedEmail: response.email }, function () {
-                    loadStoredEmail(); 
-                });
-            }
-        });
-    });
-
-    // Manually fetch email 
-    fetchEmailBtn.addEventListener("click", () => {
+    // Fetch and display the latest sender email
+    function fetchLatestEmail() {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             chrome.tabs.sendMessage(tabs[0].id, { action: "getEmail" }, (response) => {
                 if (response && response.email) {
-                    chrome.storage.local.set({ fetchedEmail: response.email }, function () {
-                        loadStoredEmail(); 
+                    chrome.storage.local.set({ email: response.email }, () => {
+                        emailInput.value = response.email;
                     });
                 } else {
-                    alert("No email detected. Enter it manually.");
+                    emailInput.placeholder = "Enter email manually";
                 }
             });
         });
+    }
+
+    // Load stored email if available
+    chrome.storage.local.get("email", (data) => {
+        if (data.email) {
+            emailInput.value = data.email;
+        } else {
+            fetchLatestEmail(); 
+        }
     });
 
-    // Send email to backend 
+    // Fetch email 
+    fetchEmailBtn.addEventListener("click", fetchLatestEmail);
+
+    // Send email to backend
     checkEmailBtn.addEventListener("click", () => {
         const email = emailInput.value.trim();
         if (!email) {
@@ -86,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Logout
     document.getElementById("logout-btn").addEventListener("click", () => {
         localStorage.removeItem("token");
-        chrome.storage.local.remove("fetchedEmail"); 
+        chrome.storage.local.remove("email");
         window.location.href = "login.html";
     });
 });
